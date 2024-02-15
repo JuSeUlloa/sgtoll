@@ -2,6 +2,8 @@ import "reflect-metadata";
 
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+import Departamento from "../../model/departamento";
+
 
 dotenv.config({ path: ".env" });
 
@@ -21,11 +23,9 @@ const poolConection = new DataSource({
     password: password,
     database: database,
     synchronize: true,
+    entities:[Departamento],
     logging: true,
     namingStrategy:new SnakeNamingStrategy()
-
-
-
 });
 
 poolConection.initialize()

@@ -1,3 +1,6 @@
 **/node_modules
 **/package-lock.json
 **/sgtoll.code-workspace
+**/database/Modelo_PC.pdb
+**/database/Modelo_PC.pdm
+**/build

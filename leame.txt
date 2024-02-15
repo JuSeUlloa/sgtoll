@@ -13,10 +13,14 @@ npm i morgan
 npm i deasync
 npm i bcryptjs
 npm i typeorm
+npm i express
 npm i formidable
 npm i jsonwebtoken
 npm i pg pg-hstore
 npm i reflect-metadata
+npm i typeorm-naming-strategies
+
+---- opcional 
 npm i nanoid@3.3.4
 
 npm i dotenv --save-dev
@@ -43,6 +47,8 @@ tsc --init
 "module": "commonjs",
 "outDir": "./build",
 "resolveJsonModule": true,
+"experimentalDecorators": true,    
+"emitDecoratorMetadata": true,
 # **************************************************************************
 
 
@@ -74,91 +80,21 @@ md src/app
 md src/doc
 md src/config
 md src/middleware
+md src/model
 
 md src/config/api
 md src/config/domain
-md src/config/utilities
+md src/config/utility
 md src/config/connexion
 __________________________________
-md src/app/access
-md src/app/register
-xxx
-md src/app/access/controller
-md src/app/access/dao
-md src/app/access/repository
-md src/app/access/entities
-md src/app/access/route
+md src/app/deparment
 
-md src/app/site/controller
-md src/app/site/dao
-md src/app/site/repository
-md src/app/site/entities
-md src/app/site/route
-
-md src/app/image/controller
-md src/app/image/dao
-md src/app/image/repository
-md src/app/image/entities
-md src/app/image/route
-
-md src/app/car/controller
-md src/app/car/dao
-md src/app/car/repository
-md src/app/car/entities
-md src/app/car/route
-
-md src/app/invest/controller
-md src/app/invest/dao
-md src/app/invest/repository
-md src/app/invest/route
-
-md src/app/project/controller
-md src/app/project/dao
-md src/app/project/repository
-md src/app/project/route
-
-md src/app/register/controller
-md src/app/register/dao
-md src/app/register/repository
-md src/app/register/entities
-md src/app/register/route
-
-md src/app/ice/controller
-md src/app/ice/dao
-md src/app/ice/repository
-md src/app/ice/entities
-md src/app/ice/route
+md src/app/deparment/controller
+md src/app/deparment/dao
+md src/app/deparment/repository
+md src/app/deparment/route
 
 
-md src/app/user/list/controller
-md src/app/user/list/dao
-md src/app/user/list/repository
-md src/app/user/list/entities
-
-md src/app/user/add/controller
-md src/app/user/add/dao
-md src/app/user/add/repository
-md src/app/user/add/entities
-
-md src/app/user/update/controller
-md src/app/user/update/dao
-md src/app/user/update/repository
-md src/app/user/update/entities
-
-md src/app/user/delete/controller
-md src/app/user/delete/dao
-md src/app/user/delete/repository
-md src/app/user/delete/entities
-
-md src/app/user/route
-
-md src/app/shared/controller
-md src/app/shared/entities
-md src/app/shared/repository
-
-md src/doc/image/system
-md src/doc/image/photo
-md src/doc/image/tmp
 # **************************************************************************
 
 
@@ -174,12 +110,6 @@ Contraseña = c960bbd6bdf34985289005ec5d1350657ed89ff73c4da7a852a7ed6b4e5d20d4
 # **************************************************************************
 
 
-# **************************************************************************
-# Copie el archivo imagenes.zip en la carpeta src\doc
-
---> Descomprima el archivo 
---> Borre el archivo comprimido
-# **************************************************************************
 
 
 # **************************************************************************
@@ -306,419 +236,6 @@ export default {
 
 
 # **************************************************************************
-# Entidad del componente shared
-# Crear el archivo: src\app\shared\entities\respuestaAcceso.ts
-
-class RespuestaAcceso {
-  protected tokenApp: string;
-  protected fotoApp: string;
-
-  constructor(tok: string, fot: string) {
-    this.tokenApp = tok;
-    this.fotoApp = fot;
-  }
-}
-export default RespuestaAcceso;
-# **************************************************************************
-
-
-# **************************************************************************
-# Repositorio del componente shared
-# Crear el archivo: src\app\shared\repository\ingreso_sql.ts
-
-export const SQL_INGRESO = {
-  DATOS:
-    "SELECT a.cod_usuario, \
-        (SELECT nombre_privado_imagen FROM imagenes WHERE favorita_imagen= 1 AND  \
-        cod_usuario = a.cod_usuario limit 1) as nombre_privado_imagen, \
-        (SELECT nombre_rol FROM roles WHERE cod_rol IN ( \
-        SELECT cod_rol FROM usuarios WHERE cod_usuario = a.cod_usuario)), \
-        u.nombres_usuario, u.apellidos_usuario, a.correo_acceso \
-        FROM accesos a INNER JOIN usuarios u on a.cod_usuario = u.cod_usuario \
-        WHERE a.correo_acceso = $1 AND u.estado_usuario = 1",
-
-  REGISTRAR:
-    "INSERT INTO ingresos (cod_usuario, fecha_ingreso, hora_ingreso) \
-        VALUES ($1, CURRENT_DATE, CURRENT_TIME) RETURNING cod_usuario",
-};
-# **************************************************************************
-
-
-# **************************************************************************
-# Controlador del componente shared
-# Crear el archivo: src\app\shared\controller\accesoControladorVerificar.ts
-
-import fs from "fs";
-import jwt from "jsonwebtoken";
-
-import RespuestaAcceso from "../entities/respuestaAcceso";
-import rutasImagenes from "../../../config/domain/var_imagenes";
-import AdministrarImagen from "../../../config/utilities/administrarImagen";
-
-class AccesoControladorVerificar {
-  public static procesarRespuesta(registro: any): RespuestaAcceso {
-    let base = "";
-    const rutaImagenSistema = rutasImagenes.fotoDefecto;
-    const rutaImagenPrivada = rutasImagenes.rutaFotosUsuarios + registro.nombrePrivadoImagen;
-    const token = jwt.sign(
-      {
-        id: registro.codUsuario,
-        correoAcceso: registro.correoAcceso,
-        nombreRol: registro.nombreRol,
-        nombresUsuario: registro.nombresUsuario,
-        apellidosUsuario: registro.apellidosUsuario,
-      },
-      "claveSuperSecreta",
-      { expiresIn: "14h" }
-    );
-
-    if (fs.existsSync(rutaImagenPrivada)) {
-      // console.log("Imagen encontrada");
-      const imagenMiniatura = rutasImagenes.rutaFotosTemporal + registro.nombreprivadoImagen;
-      AdministrarImagen.crearMiniatura(rutaImagenPrivada, imagenMiniatura, 150);
-      base = fs.readFileSync(imagenMiniatura, "base64");
-      fs.unlinkSync(imagenMiniatura);
-    } else {
-      // console.log("Imagen por defecto");
-      base = fs.readFileSync(rutaImagenSistema, "base64");
-    }
-
-    return new RespuestaAcceso(token, base);
-  }
-}
-export default AccesoControladorVerificar;
-# **************************************************************************
-
-xxx
-# **************************************************************************
-# Entidad del componente access
-# Crear el archivo: src\app\access\entities\acceso.ts
-
-class Acceso {
-  public codUsuario: number;
-  public correoAcceso: string;
-  public claveAcceso: string;
-
-  constructor(cod: number, corr: string, cla: string) {
-    this.codUsuario = cod;
-    this.correoAcceso = corr;
-    this.claveAcceso = cla;
-  }
-}
-export default Acceso;
-# **************************************************************************
-
-
-# **************************************************************************
-# Repositorio del componente access
-# Crear el archivo: src\app\access\repository\acceso_sql.ts
-
-export const SQL_ACCESO = {
-  EXISTE_CORREO:
-    "SELECT a.cod_usuario, a.correo_acceso, a.clave_acceso \
-    FROM accesos a \
-    WHERE a.correo_acceso = $1",
-
-  OBTENER:
-    "SELECT a.cod_usuario, a.correo_acceso, a.clave_acceso \
-    FROM accesos a \
-    WHERE a.cod_usuario = $1",
-};
-# **************************************************************************
-
-
-# **************************************************************************
-# DAO del componente access
-# Crear el archivo: src\app\access\dao\accesoDao.ts
-
-import cifrar from "bcryptjs";
-import { Response } from "express";
-import pool from "../../../config/connexion/connexionDB";
-
-import Acceso from "../entities/acceso";
-import { SQL_ACCESO } from "../repository/acceso_sql";
-
-import { SQL_INGRESO } from "../../shared/repository/ingreso_sql";
-import RespuestaAcceso from "../../shared/entities/respuestaAcceso";
-import AccesoControladorVerificar from "../../shared/controller/accesoControladorVerificar";
-
-class AccesoDao {
-  protected static async iniciarSesion(res: Response, objAcceso: Acceso): Promise<any> {
-    pool
-      .task(async (consulta) => {
-        let correcto = false;
-        let info: any = await consulta.result(SQL_ACCESO.EXISTE_CORREO, [objAcceso.correoAcceso]);
-        let objeto = info.rows;
-
-        if (objeto.length != 0) {
-          objeto = objeto.shift();
-          const claveCorrecta = cifrar.compareSync(objAcceso.claveAcceso, objeto.claveAcceso);
-          if (claveCorrecta) {
-            info = await consulta.result(SQL_INGRESO.DATOS, [objAcceso.correoAcceso]);
-            objeto = info.rows.shift();
-            await consulta.one(SQL_INGRESO.REGISTRAR, objeto.codUsuario);
-            correcto = true;
-          }
-        }
-        return { correcto, objeto };
-      })
-      .then(({ correcto, objeto }) => {
-        if (correcto) {
-          const resAcceso: RespuestaAcceso = AccesoControladorVerificar.procesarRespuesta(objeto);
-          res.status(200).json(resAcceso);
-        } else {
-          res.status(400).json({ respuesta: "Credenciales incorrectas" });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(400).json({ respuesta: "Error en el sistema de autenticación" });
-      });
-  }
-}
-export default AccesoDao;
-# **************************************************************************
-
-
-# **************************************************************************
-# Controlador del componente access
-# Crear el archivo: src\app\access\controller\accesoControlador.ts
-
-import { Request, Response } from "express";
-
-import Acceso from "../entities/acceso";
-import AccesoDao from "../dao/accesoDao";
-
-class AccesoControlador extends AccesoDao {
-
-  public verificarSesion(req: Request, res: Response): void {
-    const objAcceso: Acceso = req.body;
-    AccesoControlador.iniciarSesion(res, objAcceso);
-  }
-  
-}
-const accesoControlador = new AccesoControlador();
-export default accesoControlador;
-# **************************************************************************
-
-
-# **************************************************************************
-# Ruteo del componente access
-# Crear el archivo: src\app\access\route\accesoRuta.ts
-
-import { Router } from "express";
-import accesoControlador from "../controller/accesoControlador";
-
-class AccesoRuta {
-  public apiRutaAcceso: Router;
-
-  constructor() {
-    this.apiRutaAcceso = Router();
-    this.cargarRutas();
-  }
-
-  private cargarRutas(): void {
-    this.apiRutaAcceso.post("/check", accesoControlador.verificarSesion);
-  }
-
-}
-const accesoRuta = new AccesoRuta();
-export default accesoRuta.apiRutaAcceso;
-# **************************************************************************
-
-
-# **************************************************************************
-# Entidad del componente register
-# Crear el archivo: src\app\register\entities\usuario.ts
-
-class Usuario {
-  public codUsuario?: number;
-  public codRol?: number;
-  public documentoUsuario?: string;
-  public tipoDocumentoUsuario?: string;
-  public nombresUsuario?: string;
-  public apellidosUsuario?: string;
-  public telefonoUsuario?: string;
-  public estadoUsuario?: number;
-
-  public correoAcceso?: string;
-  public claveAcceso?: string;
-
-  constructor() {}
-  
-}
-export default Usuario;
-# **************************************************************************
-
-
-# **************************************************************************
-# Repositorio del componente register
-# Crear el archivo: src\app\register\repository\registro_sql.ts
-
-export const SQL_REGISTRO = {
-  CANTIDAD_CORREOS:
-    "SELECT COUNT (cod_usuario) as existe FROM accesos \
-      WHERE correo_acceso = $1",
-
-  REGISTRAR_USUARIO:
-    "INSERT INTO usuarios (documento_usuario, tipo_documento_usuario, nombres_usuario, \
-      apellidos_usuario, telefono_usuario, cod_rol, estado_usuario) VALUES ($1, $2, $3, $4, $5, $6, $7) \
-      RETURNING cod_usuario",
-
-  CREAR_ACCESO:
-    "INSERT INTO accesos (correo_acceso, clave_acceso, cod_usuario) \
-      VALUES ($1, $2, $3)"
-};
-# **************************************************************************
-
-
-# **************************************************************************
-# DAO del componente register
-# Crear el archivo: src\app\register\dao\registroDao.ts
-
-import cifrar from "bcryptjs";
-import { Response } from "express";
-import pool from "../../../config/connexion/connexionDB";
-
-import Usuario from "../entities/usuario";
-import { SQL_REGISTRO } from "./../repository/registro_sql";
-
-import { SQL_INGRESO } from "../../shared/repository/ingreso_sql";
-import RespuestaAcceso from "../../shared/entities/respuestaAcceso";
-import AccesoControladorVerificar from "../../shared/controller/accesoControladorVerificar";
-
-class RegistroDAO {
-  protected static async nuevoUsuario(datosUsuario: Usuario, parametros: string[], res: Response): Promise<any> {
-    await pool
-      .task(async (consulta) => {
-        let objeto: any;
-        let accion: number = 1;
-        const elCorreo = await consulta.one(SQL_REGISTRO.CANTIDAD_CORREOS, [datosUsuario.correoAcceso]);
-
-        if (elCorreo.existe == 0) {
-          const usu = await consulta.one(SQL_REGISTRO.REGISTRAR_USUARIO, parametros);
-          const cifrada = cifrar.hashSync(datosUsuario.claveAcceso as string);
-
-          await consulta.none(SQL_REGISTRO.CREAR_ACCESO, [datosUsuario.correoAcceso, cifrada, usu.codUsuario]);
-          await consulta.one(SQL_INGRESO.REGISTRAR, usu.codUsuario);
-
-          const info = await consulta.result(SQL_INGRESO.DATOS, [datosUsuario.correoAcceso]);
-          objeto = info.rows.shift();
-          accion = 2;
-        }
-        return { accion, objeto };
-      })
-      .then(({ accion, objeto }) => {
-        switch (accion) {
-          case 1:
-            res.status(400).json({ respuesta: "Correo ya existe" });
-            break;
-          case 2:
-            const respuestaAcceso: RespuestaAcceso = AccesoControladorVerificar.procesarRespuesta(objeto);
-            res.status(200).json(respuestaAcceso);
-            break;
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(400).json({ respuesta: "Error en la transacción al crear el usuario" });
-      });
-  }
-} // end class
-export default RegistroDAO;
-# **************************************************************************
-
-
-# **************************************************************************
-# Controlador del componente register
-# Crear el archivo: src\app\register\controller\paramUsuario.ts
-
-import { nanoid } from "nanoid";
-import { Request, Response } from "express";
-import Usuario from "../entities/usuario";
-
-type tipoParametro = { nuevoUsuario: Usuario; arregloNuevoUsuario: string[]; };
-
-class ParamUsuario {
-  public static armar(req: Request): tipoParametro {
-    const documento = "DOC_" + nanoid(15);
-
-    const nuevoUsuario: Usuario = new Usuario();
-    nuevoUsuario.documentoUsuario = documento;
-    nuevoUsuario.tipoDocumentoUsuario = "PD";
-    nuevoUsuario.nombresUsuario = req.body.nombresUsuario;
-    nuevoUsuario.apellidosUsuario = req.body.apellidosUsuario;
-    nuevoUsuario.telefonoUsuario = "No disponible";
-    nuevoUsuario.codRol = 2;
-    nuevoUsuario.estadoUsuario = 1;
-    nuevoUsuario.correoAcceso = req.body.correoAcceso;
-    nuevoUsuario.claveAcceso = req.body.claveAcceso;
-
-    const arregloNuevoUsuario: any[] = [
-      nuevoUsuario.documentoUsuario,
-      nuevoUsuario.tipoDocumentoUsuario,
-      nuevoUsuario.nombresUsuario,
-      nuevoUsuario.apellidosUsuario,
-      nuevoUsuario.telefonoUsuario,
-      nuevoUsuario.codRol,
-      nuevoUsuario.estadoUsuario,
-      nuevoUsuario.correoAcceso,
-      nuevoUsuario.claveAcceso,
-    ];
-    return { nuevoUsuario, arregloNuevoUsuario };
-  }
-
-}
-export default ParamUsuario;
-# **************************************************************************
-
-
-# **************************************************************************
-# Controlador del componente register
-# Crear el archivo: src\app\register\controller\registroControlador.ts
-
-import { Request, Response } from "express";
-
-import RegistroDAO from "../dao/registroDao";
-import ParamUsuario from "../controller/paramUsuario";
-
-class RegistroControlador extends RegistroDAO {
-  public crearUsuario(req: Request, res: Response): void {
-    const { nuevoUsuario, arregloNuevoUsuario } = ParamUsuario.armar(req);
-    RegistroControlador.nuevoUsuario(nuevoUsuario, arregloNuevoUsuario, res);
-  }
-}
-const registroControlador = new RegistroControlador();
-export default registroControlador;
-# **************************************************************************
-
-
-# **************************************************************************
-# Ruteo del componente register
-# Crear el archivo: src\app\register\route\registroRuta.ts
-
-import { Router } from "express";
-import registroControlador from "../controller/registroControlador";
-
-class RegistroRuta {
-  public apiRutaRegistro: Router;
-
-  constructor() {
-    this.apiRutaRegistro = Router();
-    this.cargarRutas();
-  }
-
-  private cargarRutas(): void {
-    this.apiRutaRegistro.post("/user", registroControlador.crearUsuario);
-  }
-  
-}
-const accesoRuta = new RegistroRuta();
-export default accesoRuta.apiRutaRegistro;
-# **************************************************************************
-
-
-# **************************************************************************
 # Servidor TS
 # Crear el archivo: src\config\api\server.ts
 
@@ -726,10 +243,8 @@ import cors from "cors";
 import morgan from "morgan";
 import express from "express";
 
-/* Rutas Api Publica */
-import rutaAPIAcceso from "../../app/access/route/accesoRuta";
-import apiRutaRegistro from "../../app/register/route/registroRuta";
 
+import rutaAPIAcceso from "../../app/access/route/accesoRuta";
 class Server {
   public app: express.Application;
 
