@@ -2,8 +2,15 @@ import cors from "cors";
 import morgan from "morgan";
 import express from "express";
 
+import rutaAPIRegistro from "../../app/register/route/registroRuta";
+import rutaAPIAcceso from "../../app/access/route/accesoRuta";
 
+import rutaAPIRoute from "../../app/route/route/rutaRoute";
 import rutaAPIDepartamento from "../../app/deparment/route/departamentoRuta";
+import rutaAPIDepaRuta from "../../app/deparmentRoute/route/departamentoRutaR";
+import rutaAPIPeaje from "../../app/toll/route/peajeRuta";
+import seguridad from "../../middleware/seguridad";
+
 class Servidor {
     public app: express.Application;
 
@@ -22,7 +29,13 @@ class Servidor {
     }
 
     public cargarRutas(): void {
-        this.app.use("/api/private/department", rutaAPIDepartamento);
+        this.app.use("/api/public/register", rutaAPIRegistro);
+        this.app.use("/api/public/acces", rutaAPIAcceso);
+
+        this.app.use("/api/private/department", seguridad.verificarToken, rutaAPIDepartamento);
+        this.app.use("/api/private/departmentRoute", seguridad.verificarToken, rutaAPIDepaRuta);
+        this.app.use("/api/private/toll", seguridad.verificarToken, rutaAPIPeaje);
+        this.app.use("/api/private/route", seguridad.verificarToken, rutaAPIRoute);
     }
 
     public iniciarServidor(): void {

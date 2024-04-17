@@ -1,4 +1,5 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import DepartamentoRuta from "./departamentoRuta";
 
 
 
@@ -10,11 +11,11 @@ class Departamento {
     @Column("character varying", { name: "nombre_departamento", length: 200 })
     public nombreDepartamento: string;
 
-    /*  @OneToMany(
-         () => DepartamentosRutas,
-         (departamentosRutas) => departamentosRutas.codDepartamento
-     )
-     departamentosRutas: DepartamentosRutas[]; */
+    @OneToMany(
+        () => DepartamentoRuta,
+        (objDepartamentoRuta) => objDepartamentoRuta.codDepartamento
+    )
+    public departamentoRuta?: DepartamentoRuta[];
 
     constructor(cod: number, nom: string) {
         this.codDepartamento = cod;

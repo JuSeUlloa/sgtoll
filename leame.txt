@@ -94,6 +94,54 @@ md src/app/deparment/dao
 md src/app/deparment/repository
 md src/app/deparment/route
 
+__________________________________
+md src/app/route
+
+md src/app/route/controller
+md src/app/route/dao
+md src/app/route/repository
+md src/app/route/route
+
+
+md src/app/user
+
+md src/app/user/controller
+md src/app/user/dao
+md src/app/user/repository
+md src/app/user/route
+
+
+md src/app/register
+
+md src/app/register/controller
+md src/app/register/dao
+md src/app/register/repository
+md src/app/register/route
+
+md src/app/access
+
+md src/app/access/controller
+md src/app/access/dao
+md src/app/access/repository
+md src/app/access/route
+
+md src/app/deparmentRoute
+
+md src/app/deparmentRoute/controller
+md src/app/deparmentRoute/dao
+md src/app/deparmentRoute/repository
+md src/app/deparmentRoute/route
+
+
+md src/app/toll
+
+md src/app/toll/controller
+md src/app/toll/dao
+md src/app/toll/repository
+md src/app/toll/route
+
+
+
 
 # **************************************************************************
 

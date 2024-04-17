@@ -3,6 +3,11 @@ import "reflect-metadata";
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
 import Departamento from "../../model/departamento";
+import Ruta from "../../model/ruta";
+import DepartamentoRuta from "../../model/departamentoRuta";
+import { Acceso } from "../../model/acceso";
+import Usuario from "../../model/usuario";
+import Peaje from "../../model/peaje";
 
 
 dotenv.config({ path: ".env" });
@@ -23,7 +28,7 @@ const poolConection = new DataSource({
     password: password,
     database: database,
     synchronize: true,
-    entities:[Departamento],
+    entities:[Departamento, Ruta, DepartamentoRuta, Acceso, Usuario, Peaje],
     logging: true,
     namingStrategy:new SnakeNamingStrategy()
 });

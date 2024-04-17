@@ -36,7 +36,7 @@ create table departamentos_rutas (
    cod_departamento_ruta serial               not null,
    cod_ruta             int4                 not null,
    cod_departamento     int4                 not null,
-   fecha_creacion_departamento_rut date                 not null,
+   fecha_creacion_departamento_ruta date                 not null,
    constraint pk_departamentos_rutas primary key (cod_departamento_ruta)
 );
 
@@ -97,7 +97,7 @@ create table turnos (
 );
 
 comment on column turnos.tipo_turno is
-'1. Mañana
+'1. Maï¿½ana
 2. Tarde
 3. Noche';
 

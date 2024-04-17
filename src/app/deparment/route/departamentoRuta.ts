@@ -12,6 +12,8 @@ class DepartamentoRuta {
     private cargarRutas(): void {
         this.apiRutaDepartamento.post("/add", departamentoControlador.crearDepartamento);
         this.apiRutaDepartamento.get("/list", departamentoControlador.obtenerDepartamentos);
+        this.apiRutaDepartamento.put("/update", departamentoControlador.actualizarDepartamento);
+        this.apiRutaDepartamento.delete("/delete/:codDepartamento", departamentoControlador.eliminarDepartamento);
     }
 
 }
