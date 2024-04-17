@@ -30,7 +30,10 @@ const poolConection = new DataSource({
     synchronize: true,
     entities:[Departamento, Ruta, DepartamentoRuta, Acceso, Usuario, Peaje],
     logging: true,
-    namingStrategy:new SnakeNamingStrategy()
+    namingStrategy:new SnakeNamingStrategy(),
+    ssl:{
+        rejectUnauthorized:false,
+    }
 });
 
 poolConection.initialize()
